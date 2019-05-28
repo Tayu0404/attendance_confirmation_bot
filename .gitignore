@@ -1,0 +1,5 @@
+# envfile
+*.env
+
+# test code and file directory
+/test/
