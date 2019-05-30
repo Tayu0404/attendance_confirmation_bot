@@ -2,9 +2,10 @@ version: '3'
 services:
     discord_bot:
         build: ./discord_bot
+        env_file:
+            - .env
         depends_on:
             - db
-        restart: always
     db:
         build: ./db
         expose:

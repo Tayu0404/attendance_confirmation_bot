@@ -7,7 +7,6 @@ import (
 	"log"
 	"strings"
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
 )
 
 var (
@@ -17,15 +16,15 @@ var (
 	help = "k!help"
 )
 
-func envLoad() {
-	err:= godotenv.Load()
-	if err != nil {
-	log.Fatal("Error loading .env file")
-	}
-}
-
+/* func envLoad() {
+*	err:= godotenv.Load()
+*	if err != nil {
+*	log.Fatal("Error loading .env file")
+*	}
+*}
+*/
 func main() {
-	envLoad()
+//	envLoad()
 	var (
 		Token = os.Getenv("BOT_TOKEN")
 //		BotName = os.Getenv("BOT_NAME")

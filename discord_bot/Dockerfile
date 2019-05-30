@@ -1,7 +1,6 @@
 FROM golang:stretch as builder
 
-RUN go get -u github.com/bwmarrin/discordgo \
-              github.com/joho/godotenv
+RUN go get -u github.com/bwmarrin/discordgo 
 
 WORKDIR /go/src/discord_bot/
 COPY . .
@@ -23,8 +22,7 @@ RUN apk update && apk add -y wget \
 	&& apk del --purge wget
 	
 COPY --from=builder /go/src/discord_bot/app .
-COPY .env .
 
-ENTRYPOINT ["dockerize", "-wait", tcp://db:3306]
+ENTRYPOINT ["dockerize", "-wait", "tcp://db:3306"]
 RUN ls -a
 CMD ["./app"]
