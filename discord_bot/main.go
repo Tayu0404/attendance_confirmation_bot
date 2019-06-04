@@ -16,18 +16,9 @@ var (
 	help = "k!help"
 )
 
-/* func envLoad() {
-*	err:= godotenv.Load()
-*	if err != nil {
-*	log.Fatal("Error loading .env file")
-*	}
-*}
-*/
 func main() {
-//	envLoad()
 	var (
 		Token = os.Getenv("BOT_TOKEN")
-//		BotName = os.Getenv("BOT_NAME")
 		stopBot = make(chan bool)
 	)
 	fmt.Println(Token)

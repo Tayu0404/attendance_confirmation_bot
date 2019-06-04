@@ -1,6 +1,7 @@
 FROM golang:stretch as builder
 
-RUN go get -u github.com/bwmarrin/discordgo 
+RUN go get -u github.com/bwmarrin/discordgo \
+              github.com/jmoiron/sqlx
 
 WORKDIR /go/src/discord_bot/
 COPY . .
