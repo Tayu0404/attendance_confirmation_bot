@@ -1,9 +1,11 @@
 FROM golang:stretch as builder
 
-RUN go get -u github.com/bwmarrin/discordgo \
-              github.com/jmoiron/sqlx
+RUN go get github.com/bwmarrin/discordgo \
+           github.com/jmoiron/sqlx
 
-WORKDIR /go/src/discord_bot/
+RUN go get -u github.com/go-sql-driver/mysql
+
+WORKDIR /go/src/github.com/Tayu0404/attendance_rec/discord_bot/
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o app .

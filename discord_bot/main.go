@@ -7,6 +7,8 @@ import (
 	"log"
 	"strings"
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/Tayu0404/attendance_rec/discord_bot/module/user.go"
 )
 
 var (

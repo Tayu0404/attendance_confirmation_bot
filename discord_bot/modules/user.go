@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jmoiron/sqlx"
+	 "github.com/jmoiron/sqlx"
+	 _"github.com/go-sql-driver/mysql"
 )
 
 type User struct {
-	ID		int		`db:"uuid"`
-	Date	string	`db:"date"`
-	Reason	string	`db:reason"`
+	ID      int     `db:"uuid"`
+	Date    string  `db:"date"`
+	Reason  string  `db:reason"`
 }
 
 type Userlist []User
 
-func main() {
+func Opendb () {
 	var userlist Userlist
 	
 	db, err := sqlx.Open("mysql", "root@/attendance_rec_db")
@@ -38,4 +39,3 @@ func main() {
 
 	fmt.Println(userlist)
 }
-
