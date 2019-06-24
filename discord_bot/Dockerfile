@@ -24,7 +24,7 @@ RUN apk update && apk add -y wget \
 	&& rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
 	&& apk del --purge wget
 	
-COPY --from=builder /go/src/discord_bot/app .
+COPY --from=builder /go/src/github.com/Tayu0404/attendance_rec/discord_bot/app .
 
 ENTRYPOINT ["dockerize", "-wait", "tcp://db:3306"]
 RUN ls -a

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/Tayu0404/attendance_rec/discord_bot/module/user.go"
+	"github.com/Tayu0404/attendance_rec/discord_bot/modules"
 )
 
 var (
