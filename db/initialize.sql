@@ -6,7 +6,7 @@ CREATE DATABASE IF NOT EXISTS `attendance_rec_db`;
 CREATE TABLE IF NOT EXISTS `attendance_rec_db`.`data` (
 	`id`                INT          NOT NULL AUTO_INCREMENT,
 	`user_id`           INT          NOT NULL,
-    `date`              DATE         NOT NULL,
+	`date`              DATE         NOT NULL,
 	`reason`            TEXT         NOT NULL,
 	PRIMARY KEY (`id`)
 );
