@@ -18,6 +18,10 @@ var (
 	help = "k!help"
 )
 
+//db connect
+db, _ := sqlx.Connect("mysql",
+	"attendance_rec:@tcp(db:3306)/attendance_rec_db")
+
 func main() {
 	var (
 		Token = os.Getenv("BOT_TOKEN")

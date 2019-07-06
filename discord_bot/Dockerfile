@@ -2,6 +2,7 @@ FROM golang:stretch as builder
 
 RUN go get github.com/bwmarrin/discordgo \
            github.com/jmoiron/sqlx
+		   github.com/carlescere/scheduler
 
 RUN go get -u github.com/go-sql-driver/mysql
 
