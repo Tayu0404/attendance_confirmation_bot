@@ -6,10 +6,15 @@ import (
 	"time"
 	"log"
 	"strings"
-	//"reflect"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/carlescere/scheduler"
+
+	//sql
+	"github.com/jmoiron/sqlx"
+	_"github.com/go-sql-driver/mysql"
+
+	"github.com/Tayu0404/attendance_rec/discord_bot/modules"
 )
 
 //command
@@ -23,6 +28,7 @@ var (
 	cmndReactions     = "a!reaction"
 )
 
+//Discord Reaction
 type Reaction struct {
 	UserID    string
 	MessageID string
@@ -37,8 +43,13 @@ type ReacCheck struct {
 	Time      time.Time
 }
 
+//Discord Reaction map
 var reac = make(map[string]Reaction)
 var reacCheckList = make(map[string]ReacCheck)
+
+//db connect
+var db, _ = sqlx.Connect("mysql",
+	"attendance_rec:@tcp(db:3306)/attendance_rec_db")
 
 func main() {
 	var (
@@ -142,11 +153,14 @@ func reactionCheck(u string, m string, key string) {
 				delete(reacCheckList, key)
 				switch {
 					case "🤒" == reac[k].Emoji:
-						fmt.Println("ReactionCheck : 🤒")
+						t := time.Now().Format("20060102")
+						module.InsertDB(db, u, t, "Sick")
 					case "😴" == reac[k].Emoji:
-						fmt.Println("ReactionCheck : 😴")
+						t := time.Now().Format("20060102")
+						module.InsertDB(db, u, t, "Oversleeping")
 					case "💼" == reac[k].Emoji:
-						fmt.Println("ReactionCheck : 💼")
+						t := time.Now().Format("20060102")
+						module.InsertDB(db, u, t, "Other")
 				}
 			}
 		}

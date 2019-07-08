@@ -14,10 +14,10 @@ type UserData struct {
 
 type Users struct {
 	ID         int        `db:"id"`
-	User_Name  int        `db:"user_name"`
+	User_Name  string        `db:"user_name"`
 }
 
-func SelectDB (db *sqlx.DB) (*[]UserData) {
+func SelectDB (db *sqlx.DB) ([]UserData) {
 	u := []UserData{}
 	err := db.Select(&u,`
 		SELECT
@@ -32,10 +32,10 @@ func SelectDB (db *sqlx.DB) (*[]UserData) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	return &u
+	return u
 }
 
-func InsertDB(db *sqlx.DB, user int, date int, reason string) {
+func InsertDB(db *sqlx.DB, user string, date string, reason string) {
 	id := UserCheckDB(db, user)
 	fmt.Println(id)
 	
@@ -48,7 +48,7 @@ func InsertDB(db *sqlx.DB, user int, date int, reason string) {
 	}
 }
 
-func UserCheckDB (db *sqlx.DB, user int) int {
+func UserCheckDB (db *sqlx.DB, user string) int {
 	u := []Users{}
 	
 	err := db.Select(&u,`
@@ -63,7 +63,7 @@ func UserCheckDB (db *sqlx.DB, user int) int {
 	return id
 }
 
-func contains (db * sqlx.DB, arr []Users, user int) int {
+func contains (db * sqlx.DB, arr []Users, user string) int {
 	//user check
 	for _, v := range arr {
 		fmt.Println(v, v.ID, v.User_Name)
