@@ -35,7 +35,7 @@ func SelectDB (db *sqlx.DB) ([]UserData) {
 	return u
 }
 
-func InsertDB(db *sqlx.DB, user string, date string, reason string) {
+func AddToDB(db *sqlx.DB, user string, date string, reason string) {
 	id := UserCheckDB(db, user)
 	fmt.Println(id)
 	

@@ -148,20 +148,21 @@ func messageReactionAdd(s *discordgo.Session, c string, m string, emojiID string
 //Reaction chack
 func reactionCheck(u string, m string, key string) {
 	for k, _ := range reac {
-		if reac[k].MessageID == m {
-			if reac[k].UserID == u {
-				delete(reacCheckList, key)
-				switch {
-					case "🤒" == reac[k].Emoji:
-						t := time.Now().Format("20060102")
-						module.InsertDB(db, u, t, "Sick")
-					case "😴" == reac[k].Emoji:
-						t := time.Now().Format("20060102")
-						module.InsertDB(db, u, t, "Oversleeping")
-					case "💼" == reac[k].Emoji:
-						t := time.Now().Format("20060102")
-						module.InsertDB(db, u, t, "Other")
-				}
+		if reac[k].MessageID != m {
+			continue
+		}
+		if reac[k].UserID == u {
+			delete(reacCheckList, key)
+			switch {
+				case "🤒" == reac[k].Emoji:
+					t := time.Now().Format("20060102")
+					module.AddToDB(db, u, t, "Sick")
+				case "😴" == reac[k].Emoji:
+					t := time.Now().Format("20060102")
+					module.AddToDB(db, u, t, "Oversleeping")
+				case "💼" == reac[k].Emoji:
+					t := time.Now().Format("20060102")
+					module.AddToDB(db, u, t, "Other")
 			}
 		}
 	}

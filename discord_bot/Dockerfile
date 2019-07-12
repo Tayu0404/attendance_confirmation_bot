@@ -28,5 +28,4 @@ RUN apk update && apk add -y wget \
 COPY --from=builder /go/src/github.com/Tayu0404/attendance_rec/discord_bot/app .
 
 ENTRYPOINT ["dockerize", "-wait", "tcp://db:3306"]
-RUN ls -a
 CMD ["./app"]
