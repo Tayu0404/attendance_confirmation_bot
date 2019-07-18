@@ -15,17 +15,20 @@ import (
 	_"github.com/go-sql-driver/mysql"
 
 	"github.com/Tayu0404/attendance_rec/discord_bot/modules"
+	"github.com/Tayu0404/attendance_rec/discord_bot/calculation"
 )
 
 //command
 var (
-	cmndAttendance    = "a!attendance"
+	cmndAttendance     = "a!attendance"
+	cmndAttendanceRate = "a!rate"
 
 	//test command
-	cmndSendMessage   = "a!send"
-	cmndDeleteMessage = "a!delete"
-	cmndReactionadd   = "a!addreaction"
-	cmndReactions     = "a!reaction"
+	cmndSendMessage    = "a!send"
+	cmndDeleteMessage  = "a!delete"
+	cmndReactionadd    = "a!addreaction"
+	cmndReactions      = "a!reaction"
+	cmndKuramubonRate  = "a!kuramubon"
 )
 
 //Discord Reaction
@@ -100,6 +103,7 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			deleteMessage(s,m.ChannelID, m.ID)
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndReactionadd)):
 			messageReactionAdd(s, m.ChannelID, m.ID, "🍣")
+		
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndAttendance)):
 			msg := sendMessage(s, m.ChannelID, "🤒 : Sick\n😴 : Oversleeping\n💼 : Other")
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "🤒")
@@ -107,6 +111,12 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "💼")
 			
 			reacCheckList[msg.ID] = ReacCheck{m.Author.ID, msg.ID, msg.ChannelID, time.Now()}
+		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndAttendanceRate)):
+			msg := calculation.AttendanceRate(db, m.Author.ID)
+			sendMessage(s, m.ChannelID, msg)
+		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndKuramubonRate)):
+			msg := calculation.AttendanceRate(db, "269793922740518913")
+			sendMessage(s, m.ChannelID, msg)
 	}
 }
 

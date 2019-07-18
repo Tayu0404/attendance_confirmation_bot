@@ -35,6 +35,25 @@ func SelectDB (db *sqlx.DB) ([]UserData) {
 	return u
 }
 
+func SelectUserDB (db *sqlx.DB, uid string) ([]UserData) {
+	u := []UserData{}
+	err := db.Select(&u, fmt.Sprint(`
+		SELECT
+			users.user_name,
+			data.date,
+			data.reason
+		FROM
+			data
+		INNER JOIN users
+		ON data.user_id = users.id
+		WHERE users.user_name='`, uid, `'
+	`))
+	if err != nil {
+		fmt.Println("SelectUserDB : ",err)
+	}
+	return u
+}
+
 func AddToDB(db *sqlx.DB, user string, date string, reason string) {
 	id := UserCheckDB(db, user)
 	fmt.Println(id)
