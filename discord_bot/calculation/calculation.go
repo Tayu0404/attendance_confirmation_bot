@@ -17,7 +17,7 @@ type Person struct {
 	Days  int `json:"days"`
 }
 
-func perseJson() []Person {
+func parseJson() []Person {
 	bytes, err := ioutil.ReadFile("schedule.json")
 	if err != nil {
 		fmt.Println("ReadFile : ", err)
@@ -32,7 +32,7 @@ func perseJson() []Person {
 
 func AttendanceRate (db *sqlx.DB, u string) (int, int, float64) {
 	sud := module.SelectUserDB(db, u)
-	ad := perseJson()
+	ad := parseJson()
 
 	var days int
 	
