@@ -30,7 +30,7 @@ func perseJson() []Person {
 	return attendanceDays
 }
 
-func AttendanceRate (db *sqlx.DB, u string) string {
+func AttendanceRate (db *sqlx.DB, u string) (int, int, float64) {
 	sud := module.SelectUserDB(db, u)
 	ad := perseJson()
 
@@ -47,7 +47,7 @@ func AttendanceRate (db *sqlx.DB, u string) string {
 	}
 	attendanceDays := days-len(sud)
 	attendanceRate:= float64(attendanceDays)/float64(days)
-	return fmt.Sprintln(round(attendanceRate,3))
+	return days, len(sud), round(attendanceRate,3)
 }
 
 func round(val float64, place int) float64 {

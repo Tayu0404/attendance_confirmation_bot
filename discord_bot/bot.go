@@ -28,7 +28,7 @@ var (
 	cmndDeleteMessage  = "a!delete"
 	cmndReactionadd    = "a!addreaction"
 	cmndReactions      = "a!reaction"
-	cmndKuramubonRate  = "a!kuramubon"
+	cmndKuramubonRate  = "a!testk"
 )
 
 //Discord Reaction
@@ -111,11 +111,23 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "💼")
 			
 			reacCheckList[msg.ID] = ReacCheck{m.Author.ID, msg.ID, msg.ChannelID, time.Now()}
+		
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndAttendanceRate)):
-			msg := calculation.AttendanceRate(db, m.Author.ID)
+			sd, ad, ar:= calculation.AttendanceRate(db, m.Author.ID)
+			msg := fmt.Sprintf(`
+				<@%s> Attendance Rate
+				School days : %d
+				Absent days : %d
+				Attendance rate : %g`, m.Author.ID, sd, ad, ar)
 			sendMessage(s, m.ChannelID, msg)
+		
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndKuramubonRate)):
-			msg := calculation.AttendanceRate(db, "269793922740518913")
+			sd, ad, ar := calculation.AttendanceRate(db, "269793922740518913")
+			msg := fmt.Sprintf(`
+				Tester K Attendance Rate
+				School days : %d
+				Absent days : %d
+				Attendance rate : %g`, sd, ad, ar)
 			sendMessage(s, m.ChannelID, msg)
 	}
 }
