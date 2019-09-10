@@ -6,6 +6,7 @@ import (
 	"time"
 	"log"
 	"strings"
+	"regexp"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/carlescere/scheduler"
@@ -43,6 +44,7 @@ type ReacCheck struct {
 	UserID    string
 	MessageID string
 	ChannelID string
+	Turget    string
 	Time      time.Time
 }
 
@@ -59,6 +61,9 @@ func main() {
 		Token = os.Getenv("BOT_TOKEN")
 		stopBot = make(chan bool)
 	)
+	
+	//scheduler.Every().Day().At("06:00").Run(calculation.Regularly)
+	scheduler.Every(2).Seconds().Run(calculation.Regularly)
 
 	discord, err := discordgo.New()
 	discord.Token = Token
@@ -93,7 +98,12 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.Bot {
 		return
 	}
+	//option
+	ou := false
 
+	if strings.Contains(m.Content, "-u"){
+		ou = true
+	}
 	switch {
 		//bot commands
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndSendMessage)):
@@ -105,12 +115,25 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			messageReactionAdd(s, m.ChannelID, m.ID, "🍣")
 		
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndAttendance)):
+			var tui []byte
+			if ou {
+				re := regexp.MustCompile(`-u\D*\d{18}`)
+				ui := re.Find([]byte(m.Content))
+				fmt.Println("ui:",string(ui))
+				re = regexp.MustCompile(`\d{18}`)
+				tui = re.Find(ui)
+				fmt.Println("tui:",string(tui))
+				if tui == nil {
+					sendMessage(s, m.ChannelID, "Invalid argument")
+					return
+				}
+			}
 			msg := sendMessage(s, m.ChannelID, "🤒 : Sick\n😴 : Oversleeping\n💼 : Other")
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "🤒")
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "😴")
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "💼")
 			
-			reacCheckList[msg.ID] = ReacCheck{m.Author.ID, msg.ID, msg.ChannelID, time.Now()}
+			reacCheckList[msg.ID] = ReacCheck{m.Author.ID, msg.ID, msg.ChannelID, string(tui), time.Now()}
 		
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndAttendanceRate)):
 			sd, ad, ar:= calculation.AttendanceRate(db, m.Author.ID)
@@ -138,7 +161,7 @@ func onMessageReactionAdd(s *discordgo.Session, r *discordgo.MessageReactionAdd)
 	fmt.Println(len(reacCheckList))
 	if len(reacCheckList) != 0 {
 		for k, _ := range reacCheckList {
-			 reactionCheck(reacCheckList[k].UserID, reacCheckList[k].MessageID, k)
+			 reactionCheck(k)
 		}
 	}
 }
@@ -168,12 +191,18 @@ func messageReactionAdd(s *discordgo.Session, c string, m string, emojiID string
 }
 
 //Reaction chack
-func reactionCheck(u string, m string, key string) {
+func reactionCheck(key string) {
+	u := reacCheckList[key].UserID
+	m := reacCheckList[key].MessageID
 	for k, _ := range reac {
 		if reac[k].MessageID != m {
 			continue
 		}
 		if reac[k].UserID == u {
+			if reacCheckList[key].Turget != "" {
+				u = reacCheckList[key].Turget
+				fmt.Println("turget: ", u)
+			} 
 			delete(reacCheckList, key)
 			switch {
 				case "🤒" == reac[k].Emoji:

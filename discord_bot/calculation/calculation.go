@@ -54,3 +54,13 @@ func round(val float64, place int) float64 {
 	shift := math.Pow(10, float64(place))
 	return math.Floor(val * shift + .5) / shift
 }
+
+func Regularly() {
+	jst := time.FixedZone("Asia/Tokyo", 9*60*60)
+	day := time.Now().In(jst).Format("2")
+	if "1" == day {
+		fmt.Println("true")
+	} else {
+		return
+	}
+}
