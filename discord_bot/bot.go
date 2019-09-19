@@ -45,8 +45,16 @@ type ReacCheck struct {
 	MessageID string
 	ChannelID string
 	Turget    string
+	Day       string
+	CaseID    string
 	Time      time.Time
 }
+
+/*
+type DBHistory struct {
+	DBID      string
+}
+*/
 
 //Discord Reaction map
 var reac = make(map[string]Reaction)
@@ -99,10 +107,14 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	//option
-	ou := false
+	ou := false //-u
+	od := false //-d
 
 	if strings.Contains(m.Content, "-u"){
 		ou = true
+	}
+	if strings.Contains(m.Content, "-d"){
+		od = true
 	}
 	switch {
 		//bot commands
@@ -115,15 +127,44 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			messageReactionAdd(s, m.ChannelID, m.ID, "🍣")
 		
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndAttendance)):
-			var tui []byte
+			var tui string
+			var tsd string
 			if ou {
 				re := regexp.MustCompile(`-u\D*\d{18}`)
 				ui := re.Find([]byte(m.Content))
 				fmt.Println("ui:",string(ui))
 				re = regexp.MustCompile(`\d{18}`)
-				tui = re.Find(ui)
+				tui = string(re.Find(ui))
 				fmt.Println("tui:",string(tui))
-				if tui == nil {
+				mem, _ := s.GuildMembers(m.GuildID,"",1000)
+				sf := true
+				for i, _ := range mem {
+					if mem[i].User.ID == tui {
+						uc, _ := s.User(tui)
+						if uc.Bot {
+							return
+						}
+						sf = false
+						continue
+					}
+				}
+				if tui == "" {
+					sendMessage(s, m.ChannelID, "Invalid argument")
+					return
+				}
+
+				if sf {
+					sendMessage(s, m.ChannelID, "no search user")
+					return
+				}
+			}
+			if od {
+				re := regexp.MustCompile(`-d.*?\d{4}\d{1,2}\d{1,2}`)
+				sd := re.Find([]byte(m.Content))
+				re = regexp.MustCompile(`\d{4}\d{1,2}\d{1,2}`)
+				tsd = string(re.Find(sd))
+				fmt.Println(tsd)
+				if tsd == "" {
 					sendMessage(s, m.ChannelID, "Invalid argument")
 					return
 				}
@@ -133,24 +174,16 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "😴")
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "💼")
 			
-			reacCheckList[msg.ID] = ReacCheck{m.Author.ID, msg.ID, msg.ChannelID, string(tui), time.Now()}
+			reacCheckList[msg.ID] = ReacCheck{m.Author.ID, msg.ID, msg.ChannelID, tui, tsd, "attendance", time.Now()}
 		
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndAttendanceRate)):
 			sd, ad, ar:= calculation.AttendanceRate(db, m.Author.ID)
-			msg := fmt.Sprintf(`
-				<@%s> Attendance Rate
-				School days : %d
-				Absent days : %d
-				Attendance rate : %g`, m.Author.ID, sd, ad, ar)
+			msg := fmt.Sprintf("<@%s> Attendance Rate \n School days : %d \n Absent days : %d \n Attendance rate : %g%%", m.Author.ID, sd, ad, ar)
 			sendMessage(s, m.ChannelID, msg)
 		
 		case strings.HasPrefix(m.Content, fmt.Sprintf(cmndKuramubonRate)):
 			sd, ad, ar := calculation.AttendanceRate(db, "269793922740518913")
-			msg := fmt.Sprintf(`
-				Tester K Attendance Rate
-				School days : %d
-				Absent days : %d
-				Attendance rate : %g`, sd, ad, ar)
+			msg := fmt.Sprintf("Tester K Attendance Rate \n School days : %d \n Absent days : %d \n Attendance rate : %g%%", sd, ad, ar)
 			sendMessage(s, m.ChannelID, msg)
 	}
 }
@@ -161,7 +194,7 @@ func onMessageReactionAdd(s *discordgo.Session, r *discordgo.MessageReactionAdd)
 	fmt.Println(len(reacCheckList))
 	if len(reacCheckList) != 0 {
 		for k, _ := range reacCheckList {
-			 reactionCheck(k)
+			 reactionCheck(k, s)
 		}
 	}
 }
@@ -191,9 +224,10 @@ func messageReactionAdd(s *discordgo.Session, c string, m string, emojiID string
 }
 
 //Reaction chack
-func reactionCheck(key string) {
+func reactionCheck(key string, s *discordgo.Session) {
 	u := reacCheckList[key].UserID
 	m := reacCheckList[key].MessageID
+	c := reacCheckList[key].ChannelID
 	for k, _ := range reac {
 		if reac[k].MessageID != m {
 			continue
@@ -202,18 +236,40 @@ func reactionCheck(key string) {
 			if reacCheckList[key].Turget != "" {
 				u = reacCheckList[key].Turget
 				fmt.Println("turget: ", u)
-			} 
-			delete(reacCheckList, key)
+			}
+			
+			t := time.Now().Format("20060102")
+			if reacCheckList[key].Day != "" {
+				t = reacCheckList[key].Day
+			}
 			switch {
 				case "🤒" == reac[k].Emoji:
-					t := time.Now().Format("20060102")
-					module.AddToDB(db, u, t, "Sick")
+					err := module.AddToDB(db, u, t, "Sick")
+					if err == nil {
+						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Sick", u, t)
+						sendMessage(s, c, msg)
+					} else {
+						sendMessage(s, c, "Error")
+					}
+					delete(reacCheckList, key)
 				case "😴" == reac[k].Emoji:
-					t := time.Now().Format("20060102")
-					module.AddToDB(db, u, t, "Oversleeping")
+					err := module.AddToDB(db, u, t, "Oversleeping")
+					if err == nil {
+						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Over Sleeping", u, t)
+						sendMessage(s, c, msg)
+					} else {
+						sendMessage(s, c, "Error")
+					}
+					delete(reacCheckList, key)
 				case "💼" == reac[k].Emoji:
-					t := time.Now().Format("20060102")
-					module.AddToDB(db, u, t, "Other")
+					err := module.AddToDB(db, u, t, "Other")
+					if err == nil {
+						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Other", u, t)
+						sendMessage(s, c, msg)
+					} else {
+						sendMessage(s, c, "Error")
+					}
+					delete(reacCheckList, key)
 			}
 		}
 	}

@@ -54,17 +54,18 @@ func SelectUserDB (db *sqlx.DB, uid string) ([]UserData) {
 	return u
 }
 
-func AddToDB(db *sqlx.DB, user string, date string, reason string) {
+func AddToDB(db *sqlx.DB, user string, date string, reason string) (err error){
 	id := UserCheckDB(db, user)
 	fmt.Println(id)
 	
-	_, err := db.Query(fmt.Sprint(`
+	_, err = db.Query(fmt.Sprint(`
 	INSERT INTO data (user_id, date, reason)
 	VALUES ('`, id, `', '`, date, `', '`, reason, `')`))
 
 	if err != nil {
 		fmt.Println(err)
 	}
+	return
 }
 
 func UserCheckDB (db *sqlx.DB, user string) int {

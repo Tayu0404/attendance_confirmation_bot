@@ -45,9 +45,8 @@ func AttendanceRate (db *sqlx.DB, u string) (int, int, float64) {
 			days = v.Days
 		}
 	}
-	attendanceDays := days-len(sud)
-	attendanceRate:= float64(attendanceDays)/float64(days)
-	return days, len(sud), round(attendanceRate,3)
+	attendanceRate := float64(len(sud))/float64(days)*100
+	return days, len(sud), round(attendanceRate,2)
 }
 
 func round(val float64, place int) float64 {
