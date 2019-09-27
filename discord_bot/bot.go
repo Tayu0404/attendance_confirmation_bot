@@ -6,6 +6,7 @@ import (
 	"time"
 	"log"
 	"strings"
+	"strconv"
 	"regexp"
 
 	"github.com/bwmarrin/discordgo"
@@ -168,6 +169,17 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					sendMessage(s, m.ChannelID, "Invalid argument")
 					return
 				}
+				year, _ := strconv.Atoi(tsd[:4])
+				fmt.Println(year)
+				month, _ := strconv.Atoi(tsd[4:6])
+				fmt.Println(month)
+				day, _ := strconv.Atoi(tsd[6:8])
+				fmt.Println(day)
+				err := isExist(year, month, day)
+				if err != nil {
+					sendMessage(s, m.ChannelID, "Invalid argument")
+					return
+				}
 			}
 			msg := sendMessage(s, m.ChannelID, "🤒 : Sick\n😴 : Oversleeping\n💼 : Other")
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "🤒")
@@ -296,3 +308,20 @@ func reactionTimeout() {
 		}
 	}
 }
+
+func isExist(year, month, day int) (/*float64*/, error) {
+	date := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
+	if date.Year() == year && date.Month() == time.Month(month) && date.Day() == day {
+		return /*Julian(date),*/ nil
+	} else {
+		return 0, fmt.Errorf("%d-%d-%d is not exist", year, month, day)
+	}
+}
+/*
+func Julian(t time.Time) float64 {
+	const julian = 2453738.4195
+	unix := time.Unix(1136239445, 0)
+	const oneDay = float64(86400. * time.Second)
+	return julian + float64(t.Sub(unix))/oneDay
+}
+*/
