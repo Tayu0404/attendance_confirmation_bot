@@ -51,12 +51,6 @@ type ReacCheck struct {
 	Time      time.Time
 }
 
-/*
-type DBHistory struct {
-	DBID      string
-}
-*/
-
 //Discord Reaction map
 var reac = make(map[string]Reaction)
 var reacCheckList = make(map[string]ReacCheck)
@@ -71,7 +65,6 @@ func main() {
 		stopBot = make(chan bool)
 	)
 	
-	//scheduler.Every().Day().At("06:00").Run(calculation.Regularly)
 	scheduler.Every(2).Seconds().Run(calculation.Regularly)
 
 	discord, err := discordgo.New()
@@ -254,9 +247,15 @@ func reactionCheck(key string, s *discordgo.Session) {
 			if reacCheckList[key].Day != "" {
 				t = reacCheckList[key].Day
 			}
+			err := module.CheckDate(db, u, t)
+			if err != nil {
+				sendMessage(s, c, "ToDo")
+				return
+			}
+
 			switch {
 				case "🤒" == reac[k].Emoji:
-					err := module.AddToDB(db, u, t, "Sick")
+					err = module.AddToDB(db, u, t, "Sick")
 					if err == nil {
 						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Sick", u, t)
 						sendMessage(s, c, msg)
@@ -265,7 +264,7 @@ func reactionCheck(key string, s *discordgo.Session) {
 					}
 					delete(reacCheckList, key)
 				case "😴" == reac[k].Emoji:
-					err := module.AddToDB(db, u, t, "Oversleeping")
+					err = module.AddToDB(db, u, t, "Oversleeping")
 					if err == nil {
 						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Over Sleeping", u, t)
 						sendMessage(s, c, msg)
@@ -274,7 +273,7 @@ func reactionCheck(key string, s *discordgo.Session) {
 					}
 					delete(reacCheckList, key)
 				case "💼" == reac[k].Emoji:
-					err := module.AddToDB(db, u, t, "Other")
+					err = module.AddToDB(db, u, t, "Other")
 					if err == nil {
 						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Other", u, t)
 						sendMessage(s, c, msg)
@@ -295,7 +294,7 @@ func reactionTimeout() {
 		fmt.Println(c <= t)
 		if c <= t {
 			delete(reac,k)
-			fmt.Println(reac)
+			fmt.Println("reac:", reac)
 		}
 	}
 
@@ -304,24 +303,16 @@ func reactionTimeout() {
 		c := time.Duration(300000000000)
 		if c <= t {
 			delete(reacCheckList, k)
-			fmt.Println(reacCheckList)
+			fmt.Println("reacChecList:", reacCheckList)
 		}
 	}
 }
 
-func isExist(year, month, day int) (/*float64*/, error) {
+func isExist(year, month, day int) (error) {
 	date := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
 	if date.Year() == year && date.Month() == time.Month(month) && date.Day() == day {
-		return /*Julian(date),*/ nil
+		return nil
 	} else {
-		return 0, fmt.Errorf("%d-%d-%d is not exist", year, month, day)
+		return fmt.Errorf("%d-%d-%d is not exist", year, month, day)
 	}
 }
-/*
-func Julian(t time.Time) float64 {
-	const julian = 2453738.4195
-	unix := time.Unix(1136239445, 0)
-	const oneDay = float64(86400. * time.Second)
-	return julian + float64(t.Sub(unix))/oneDay
-}
-*/

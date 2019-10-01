@@ -79,11 +79,11 @@ func UserCheckDB (db *sqlx.DB, user string) int {
 		fmt.Println(err)
 	}
 
-	id := contains(db, u, user)
+	id := contains(db, u, user) 
 	return id
 }
 
-func contains (db * sqlx.DB, arr []Users, user string) int {
+func contains (db *sqlx.DB, arr []Users, user string) int {
 	//user check
 	for _, v := range arr {
 		fmt.Println(v, v.ID, v.User_Name)
@@ -105,4 +105,19 @@ func contains (db * sqlx.DB, arr []Users, user string) int {
 		FROM users
 		WHERE user_name='`, user, `'`))
 	return id.ID
+}
+func CheckDate (db *sqlx.DB, userID string, date string) (err error) {
+	u := []string{}
+	err = db.Select(&u, fmt.Sprint(`
+		SELECT
+			data.date,
+		FROM
+			data
+		INNER JOIN users ON data.user_id = users.id
+		WHERE users.user_name='`, userID, `'
+		WHERE data.date='`, date, `'`))
+	if err != nil {
+		return
+	}
+	return
 }
