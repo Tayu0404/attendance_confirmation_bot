@@ -30,7 +30,7 @@ func SelectDB (db *sqlx.DB) ([]UserData) {
 		ON data.user_id = users.id
 	`)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("SelectDB:", err)
 	}
 	return u
 }
@@ -63,7 +63,7 @@ func AddToDB(db *sqlx.DB, user string, date string, reason string) (err error){
 	VALUES ('`, id, `', '`, date, `', '`, reason, `')`))
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("AddToDB:", err)
 	}
 	return
 }
@@ -76,10 +76,10 @@ func UserCheckDB (db *sqlx.DB, user string) int {
 		FROM users
 	`)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("UserCheckDB:", err)
 	}
 
-	id := contains(db, u, user) 
+	id := contains(db, u, user)
 	return id
 }
 
@@ -97,7 +97,7 @@ func contains (db *sqlx.DB, arr []Users, user string) int {
 		INSERT INTO users (user_name)
 		VALUES ('`, user, `')`))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("contains:", err)
 	}
 	var id Users
 	err = db.Select(&id, fmt.Sprint(`
@@ -106,18 +106,27 @@ func contains (db *sqlx.DB, arr []Users, user string) int {
 		WHERE user_name='`, user, `'`))
 	return id.ID
 }
-func CheckDate (db *sqlx.DB, userID string, date string) (err error) {
+
+func CheckDate (db *sqlx.DB, userID string, date string) bool {
 	u := []string{}
-	err = db.Select(&u, fmt.Sprint(`
+
+	fd := fmt.Sprintf("%s-%s-%s", date[:4], date[4:6], date[6:8])
+	fmt.Println(fd)
+
+	err := db.Select(&u, fmt.Sprint(`
 		SELECT
-			data.date,
+			data.date
 		FROM
 			data
 		INNER JOIN users ON data.user_id = users.id
 		WHERE users.user_name='`, userID, `'
-		WHERE data.date='`, date, `'`))
+		AND data.date='`, fd, `'`))
 	if err != nil {
-		return
+		fmt.Println("CheckDate:", err)
+		return false
 	}
-	return
+	if len(u) == 0 {
+		return false
+	}
+	return true
 }

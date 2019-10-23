@@ -65,7 +65,7 @@ func main() {
 		stopBot = make(chan bool)
 	)
 	
-	scheduler.Every(2).Seconds().Run(calculation.Regularly)
+	//scheduler.Every(2).Seconds().Run(calculation.Regularly)
 
 	discord, err := discordgo.New()
 	discord.Token = Token
@@ -163,21 +163,20 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					return
 				}
 				year, _ := strconv.Atoi(tsd[:4])
-				fmt.Println(year)
 				month, _ := strconv.Atoi(tsd[4:6])
-				fmt.Println(month)
 				day, _ := strconv.Atoi(tsd[6:8])
-				fmt.Println(day)
 				err := isExist(year, month, day)
 				if err != nil {
 					sendMessage(s, m.ChannelID, "Invalid argument")
 					return
 				}
 			}
-			msg := sendMessage(s, m.ChannelID, "🤒 : Sick\n😴 : Oversleeping\n💼 : Other")
+			msg := sendMessage(s, m.ChannelID, "🤒 : Sick\n😴 : Oversleeping\n🚃 : Train delay\n💼 : Other\n🏫 : Official absence")
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "🤒")
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "😴")
+			messageReactionAdd(s, msg.ChannelID, msg.ID, "🚃")
 			messageReactionAdd(s, msg.ChannelID, msg.ID, "💼")
+			messageReactionAdd(s, msg.ChannelID, msg.ID, "🏫")
 			
 			reacCheckList[msg.ID] = ReacCheck{m.Author.ID, msg.ID, msg.ChannelID, tui, tsd, "attendance", time.Now()}
 		
@@ -196,7 +195,6 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 func onMessageReactionAdd(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
 	fmt.Printf("%20s %20s > %s\n", time.Now().Format(time.Stamp), r.UserID, r.Emoji.Name)
 	reac[r.MessageID] = Reaction{r.UserID, r.MessageID, r.Emoji.Name, time.Now()}
-	fmt.Println(len(reacCheckList))
 	if len(reacCheckList) != 0 {
 		for k, _ := range reacCheckList {
 			 reactionCheck(k, s)
@@ -233,10 +231,13 @@ func reactionCheck(key string, s *discordgo.Session) {
 	u := reacCheckList[key].UserID
 	m := reacCheckList[key].MessageID
 	c := reacCheckList[key].ChannelID
+	fmt.Println(u)
 	for k, _ := range reac {
 		if reac[k].MessageID != m {
 			continue
 		}
+		fmt.Println(reac[k].UserID)
+		fmt.Println(u)
 		if reac[k].UserID == u {
 			if reacCheckList[key].Turget != "" {
 				u = reacCheckList[key].Turget
@@ -247,15 +248,16 @@ func reactionCheck(key string, s *discordgo.Session) {
 			if reacCheckList[key].Day != "" {
 				t = reacCheckList[key].Day
 			}
-			err := module.CheckDate(db, u, t)
-			if err != nil {
+			cd := module.CheckDate(db, u, t)
+			if cd {
+				fmt.Println(cd)
 				sendMessage(s, c, "ToDo")
 				return
 			}
 
 			switch {
 				case "🤒" == reac[k].Emoji:
-					err = module.AddToDB(db, u, t, "Sick")
+					err := module.AddToDB(db, u, t, "Sick")
 					if err == nil {
 						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Sick", u, t)
 						sendMessage(s, c, msg)
@@ -264,7 +266,7 @@ func reactionCheck(key string, s *discordgo.Session) {
 					}
 					delete(reacCheckList, key)
 				case "😴" == reac[k].Emoji:
-					err = module.AddToDB(db, u, t, "Oversleeping")
+					err := module.AddToDB(db, u, t, "Oversleeping")
 					if err == nil {
 						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Over Sleeping", u, t)
 						sendMessage(s, c, msg)
@@ -272,10 +274,28 @@ func reactionCheck(key string, s *discordgo.Session) {
 						sendMessage(s, c, "Error")
 					}
 					delete(reacCheckList, key)
+				case "🚃" == reac[k].Emoji:
+					err := module.AddToDB(db, u, t, "Train delay")
+					if err == nil {
+						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Train delay", u, t)
+						sendMessage(s, c, msg)
+					} else {
+						sendMessage(s, c, "Error")
+					}
+					delete(reacCheckList, key)
 				case "💼" == reac[k].Emoji:
-					err = module.AddToDB(db, u, t, "Other")
+					err := module.AddToDB(db, u, t, "Other")
 					if err == nil {
 						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Other", u, t)
+						sendMessage(s, c, msg)
+					} else {
+						sendMessage(s, c, "Error")
+					}
+					delete(reacCheckList, key)
+				case "🏫" == reac[k].Emoji:
+					err := module.AddToDB(db, u, t, "Official absence")
+					if err == nil {
+						msg := fmt.Sprintf("Record \n User   : <@%s> \n Date   : %s \n Reason : Official absence", u, t)
 						sendMessage(s, c, msg)
 					} else {
 						sendMessage(s, c, "Error")
@@ -291,10 +311,8 @@ func reactionTimeout() {
 	for k, _ := range reac {
 		t := time.Since(reac[k].Time)
 		c := time.Duration(300000000000)
-		fmt.Println(c <= t)
 		if c <= t {
 			delete(reac,k)
-			fmt.Println("reac:", reac)
 		}
 	}
 
@@ -303,7 +321,6 @@ func reactionTimeout() {
 		c := time.Duration(300000000000)
 		if c <= t {
 			delete(reacCheckList, k)
-			fmt.Println("reacChecList:", reacCheckList)
 		}
 	}
 }
